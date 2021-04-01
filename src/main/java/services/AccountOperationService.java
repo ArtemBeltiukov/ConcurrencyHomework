@@ -1,5 +1,6 @@
 package services;
 
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -14,9 +15,14 @@ public class AccountOperationService implements Runnable {
     private final Lock lock = new ReentrantLock();
     private static AtomicInteger operationCount = new AtomicInteger(1);
     private static AtomicInteger totalOperationCount = new AtomicInteger(0);
+    private static AtomicInteger successfulOperationCount = new AtomicInteger(0);
 
     public static AtomicInteger getTotalOperationCount() {
         return totalOperationCount;
+    }
+
+    public static AtomicInteger getSuccessfulOperationCount() {
+        return successfulOperationCount;
     }
 
     @Override
@@ -24,7 +30,7 @@ public class AccountOperationService implements Runnable {
 
         int from;
         int to;
-        long amount = 100000;
+        long amount = ThreadLocalRandom.current().nextLong(0, 100000);
         boolean locked = false;
 
         try {
@@ -40,10 +46,10 @@ public class AccountOperationService implements Runnable {
                 to = operationCount.get() + 1;
             }
 
-            if (accountService.transact(from, to, amount))
-                log.log(Level.INFO, "Transact {0}", String.format("%s amount from id %s to id %s successful",
-                        amount, from, to));
-            else
+            if (accountService.transact(from, to, amount)){log.log(Level.INFO, "Transact {0}", String.format("%s amount from id %s to id %s successful",
+                    amount, from, to));
+                successfulOperationCount.incrementAndGet();
+            } else
                 log.log(Level.INFO, "Transact {0}", String.format("%s amount from id %s to id %s failed \n" +
                                 "It have only %s amount",
                         amount, from, to, accountService.getAccountByID(from).getBalance()));

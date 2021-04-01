@@ -15,14 +15,14 @@ public class Main {
         final int ACC_COUNT = 10;
         final int NUMBER_OF_TREADS = 20000;
         final int NUMBER_OF_OPERATIONS = 1000;
+        // Нужно ли создавать акки
         boolean needToCreateAccs = false;
         AccountService accountService = new AccountService();
         AccountOperationService accountOperationService = new AccountOperationService();
         ExecutorService executorService = Executors.newFixedThreadPool(NUMBER_OF_TREADS);
         List<Account> accountListStart = new LinkedList<>();
         List<Account> accountListFinal = new LinkedList<>();
-        List<Account> accountListDifferences = new LinkedList<>();
-        int count = 0;
+
         // Создавалка новых файлов, с генерацией
         if (needToCreateAccs)
             accountService.createAndSerializeAccounts(ACC_COUNT);
@@ -33,36 +33,55 @@ public class Main {
             e.printStackTrace();
         }
         // запускает операции
-        for (int i = 0; i < NUMBER_OF_OPERATIONS; i++)
+//        for (int i=0;i<NUMBER_OF_OPERATIONS;i++){
+//            executorService.execute(accountOperationService);
+//        }
+//        //ждем завершения
+//        try {
+//            executorService.awaitTermination(10, TimeUnit.SECONDS);
+//        } catch (InterruptedException e) {
+//            Thread.currentThread().interrupt();
+//        }
+//        //получаем измененный список аккаунтов+ пишем их в переменную
+//        try {
+//            accountListFinal = accountService.getAccountsFromFiles();
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        }
+//        if (NUMBER_OF_OPERATIONS - AccountOperationService.getSuccessfulOperationCount().get()>0){
+//
+//        }
+
+        runTasks(NUMBER_OF_OPERATIONS,executorService, accountOperationService);
+        // завершаем потоки
+        executorService.shutdown();
+
+        if (accountListStart.stream().mapToLong(Account::getBalance).sum()
+            ==accountListFinal.stream().mapToLong(Account::getBalance).sum())
+            System.out.println("summary balances are equal");
+        else
+            System.out.println("summary balances are not equal");
+
+        System.out.println("Total operation count: "
+                + AccountOperationService.getTotalOperationCount());
+        System.out.println("Successful operation count: "
+                + AccountOperationService.getSuccessfulOperationCount());
+
+    }
+
+    public static void runTasks(int count, ExecutorService executorService, AccountOperationService accountOperationService){
+        for (int i=0;i<count;i++){
             executorService.execute(accountOperationService);
+        }
         //ждем завершения
         try {
             executorService.awaitTermination(10, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        //получаем измененный список аккаунтов+ пишем их в переменную
-        try {
-            accountListFinal = accountService.getAccountsFromFiles();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        // завершаем потоки
-        executorService.shutdown();
-        // сравниваем списки аккаунтов было\стало
-        for (Account accountStart : accountListStart) {
-            Account accountFinal = accountListFinal.get(count);
-            if (accountStart.getBalance() != accountFinal.getBalance()) {
-                accountListDifferences.add(accountFinal);
-            }
-            count++;
+            Thread.currentThread().interrupt();
         }
 
-        System.out.println("Total operation count: "
-                + AccountOperationService.getTotalOperationCount());
-        if (accountListDifferences.isEmpty()) {
-            System.out.println("Lists are equal");
-        } else
-            System.out.println(accountListDifferences);
+        if (count - AccountOperationService.getSuccessfulOperationCount().get()>0){
+            runTasks(count - AccountOperationService.getSuccessfulOperationCount().get(),executorService,accountOperationService);
+        }
     }
 }
