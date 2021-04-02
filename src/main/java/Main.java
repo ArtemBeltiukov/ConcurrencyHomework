@@ -33,25 +33,6 @@ public class Main {
             e.printStackTrace();
         }
         // запускает операции
-//        for (int i=0;i<NUMBER_OF_OPERATIONS;i++){
-//            executorService.execute(accountOperationService);
-//        }
-//        //ждем завершения
-//        try {
-//            executorService.awaitTermination(10, TimeUnit.SECONDS);
-//        } catch (InterruptedException e) {
-//            Thread.currentThread().interrupt();
-//        }
-//        //получаем измененный список аккаунтов+ пишем их в переменную
-//        try {
-//            accountListFinal = accountService.getAccountsFromFiles();
-//        } catch (FileNotFoundException e) {
-//            e.printStackTrace();
-//        }
-//        if (NUMBER_OF_OPERATIONS - AccountOperationService.getSuccessfulOperationCount().get()>0){
-//
-//        }
-
         runTasks(NUMBER_OF_OPERATIONS,executorService, accountOperationService);
         // завершаем потоки
         executorService.shutdown();
