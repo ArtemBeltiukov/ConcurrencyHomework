@@ -1,21 +1,18 @@
 package services;
 
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 
 public class AccountOperationService implements Runnable {
 
     private final Logger log = Logger.getLogger(this.getClass().getName());
     private final AccountService accountService = new AccountService();
-    private final Lock lock = new ReentrantLock();
-    private static AtomicInteger operationCount = new AtomicInteger(1);
-    private static AtomicInteger totalOperationCount = new AtomicInteger(0);
-    private static AtomicInteger successfulOperationCount = new AtomicInteger(0);
+    private static final AtomicInteger operationCount = new AtomicInteger(1);
+    private static final AtomicInteger totalOperationCount = new AtomicInteger(0);
+    private static final AtomicInteger successfulOperationCount = new AtomicInteger(0);
 
     public static AtomicInteger getTotalOperationCount() {
         return totalOperationCount;
@@ -27,43 +24,23 @@ public class AccountOperationService implements Runnable {
 
     @Override
     public void run() {
-
         int from;
         int to;
         long amount = ThreadLocalRandom.current().nextLong(0, 100000);
-        boolean locked = false;
+        from = ThreadLocalRandom.current().nextInt(1, 11);
+        to = ThreadLocalRandom.current().nextInt(1, 11);
 
-        try {
-            while (!locked)
-                locked = lock.tryLock(1000, TimeUnit.MILLISECONDS);
-
-            if (operationCount.get() == 10) {
-                from = 10;
-                to = 1;
-                operationCount.set(0);
-            } else {
-                from = operationCount.get();
-                to = operationCount.get() + 1;
-            }
-
-            if (accountService.transact(from, to, amount)){log.log(Level.INFO, "Transact {0}", String.format("%s amount from id %s to id %s successful",
+        if (accountService.transact(from, to, amount)) {
+            log.log(Level.INFO, "Transact {0}", String.format("%s amount from id %s to id %s successful",
                     amount, from, to));
-                successfulOperationCount.incrementAndGet();
-            } else
-                log.log(Level.INFO, "Transact {0}", String.format("%s amount from id %s to id %s failed \n" +
-                                "It have only %s amount",
-                        amount, from, to, accountService.getAccountByID(from).getBalance()));
-            operationCount.incrementAndGet();
-            totalOperationCount.incrementAndGet();
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            if (locked) {
-                lock.unlock();
-
-            }
-        }
+            successfulOperationCount.incrementAndGet();
+        } else
+            log.log(Level.INFO, "Transact {0}", String.format("%s amount from id %s to id %s failed \n" +
+                            "It have not enough amount",
+                    amount, from, to));
+        operationCount.incrementAndGet();
+        totalOperationCount.incrementAndGet();
     }
 }
+
 

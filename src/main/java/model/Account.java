@@ -1,7 +1,10 @@
 package model;
 
 import java.io.Serializable;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Account implements Serializable {
 
@@ -9,7 +12,9 @@ public class Account implements Serializable {
     private long balance;
     private String name;
     private String city;
+    private ReentrantLock lock = new ReentrantLock();
     private final int id;
+    private boolean locked;
 
     public Account(long balance, String name, String city) {
         this.balance = balance;
@@ -55,4 +60,18 @@ public class Account implements Serializable {
     public long getId() {
         return id;
     }
+
+    public boolean getLock() throws InterruptedException {
+        return lock.tryLock(1, TimeUnit.SECONDS);
+    }
+
+    public void unlock() {
+        if (lock.isHeldByCurrentThread())
+            lock.unlock();
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
 }
