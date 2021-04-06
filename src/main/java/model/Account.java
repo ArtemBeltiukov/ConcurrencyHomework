@@ -1,6 +1,7 @@
 package model;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -14,13 +15,25 @@ public class Account implements Serializable {
     private String city;
     private ReentrantLock lock = new ReentrantLock();
     private final int id;
-    private boolean locked;
 
     public Account(long balance, String name, String city) {
         this.balance = balance;
         this.name = name;
         this.city = city;
         this.id = count.incrementAndGet();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Account account = (Account) o;
+        return balance == account.balance && id == account.id && name.equals(account.name) && city.equals(account.city);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(balance, name, city, lock, id);
     }
 
     @Override
@@ -41,22 +54,6 @@ public class Account implements Serializable {
         this.balance = balance;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
-    }
-
     public long getId() {
         return id;
     }
@@ -66,12 +63,12 @@ public class Account implements Serializable {
     }
 
     public void unlock() {
-        if (lock.isHeldByCurrentThread())
+        if (lock.isLocked())
             lock.unlock();
     }
 
-    public boolean isLocked() {
-        return locked;
+    public static void setIDCounterToZero(){
+        count.set(0);
     }
 
 }

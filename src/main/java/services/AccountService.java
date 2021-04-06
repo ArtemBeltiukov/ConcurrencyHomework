@@ -1,6 +1,5 @@
 package services;
 
-import dao.AccountController;
 import model.Account;
 
 import java.io.*;
@@ -10,11 +9,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class AccountService extends AccountController {
+public class AccountService {
 
     private final String PATH = System.getProperty("user.dir") + "/accounts";
-    private final File folder = new File(PATH);
+    private final File folder = new File(getPath());
     private static List<Account> accounts = new ArrayList<>();
+
+    public String getPath(){
+        return PATH;
+    }
 
     public void createAndSerializeAccounts(int count) {
         AccountFactory accountFactory = new AccountFactory();
@@ -25,7 +28,7 @@ public class AccountService extends AccountController {
     }
 
     public void fillCache() {
-        File file = new File(PATH);
+        File file = new File(getPath());
         for (File account : Objects.requireNonNull(file.listFiles())) {
             accounts.add(deserializeAccount(account));
         }
@@ -52,7 +55,6 @@ public class AccountService extends AccountController {
                 .map(this::deserializeAccount).collect(Collectors.toList());
     }
 
-    @Override
     public boolean transact(int fromID, int toID, long amount) {
 
         try {
@@ -69,11 +71,7 @@ public class AccountService extends AccountController {
                 if (from.getBalance() >= amount) {
                     from.setBalance(from.getBalance() - amount);
                     to.setBalance(to.getBalance() + amount);
-                    if (updateAccount(from) && updateAccount(to)) {
-                        result = true;
-                    } else {
-                        result = false;
-                    }
+                    result = updateAccount(from) && updateAccount(to);
                 } else {
                     result = false;
                 }
@@ -82,54 +80,29 @@ public class AccountService extends AccountController {
                 to.unlock();
             }
             return result;
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return false;
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return false;
         }
     }
 
-    @Override
-    public boolean transact(Account from, Account to, long amount) {
-        if (from != null && to != null) {
-            if (from.getBalance() >= amount) {
-                from.setBalance(from.getBalance() - amount);
-                to.setBalance(to.getBalance() + amount);
-                return updateAccount(from) & updateAccount(to);
-            } else {
-                return false;
-            }
-        } else {
-            System.out.println("Can`t get access to account(s)");
-            return false;
-        }
-    }
-
-    @Override
-    public Account getAccountByID(int id) throws FileNotFoundException {
+    public Account getAccountByID(int id) {
         return accounts.stream().filter(x -> x.getId() == id).findFirst().orElseThrow();
     }
 
-    @Override
-    public boolean createAccount(Account account) {
+    public void createAccount(Account account) {
 
         if (!folder.exists())
             folder.mkdir();
 
-        try (FileOutputStream outputStream = new FileOutputStream(PATH + "/" + account.getId() + ".acc");
+        try (FileOutputStream outputStream = new FileOutputStream(getPath() + "/" + account.getId() + ".acc");
              ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream)) {
             objectOutputStream.writeObject(account);
-            return true;
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return false;
     }
 
-    @Override
     public boolean updateAccount(Account account) {
 
         accounts = accounts.stream().map(x -> {
@@ -142,7 +115,7 @@ public class AccountService extends AccountController {
     }
 
     public void serializeAccount(Account account) {
-        try (FileOutputStream outputStream = new FileOutputStream(PATH + "/" + account.getId() + ".acc");
+        try (FileOutputStream outputStream = new FileOutputStream(getPath() + "/" + account.getId() + ".acc");
              ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream)) {
             objectOutputStream.writeObject(account);
         } catch (IOException e) {
@@ -151,6 +124,6 @@ public class AccountService extends AccountController {
     }
 
     public void writeAccounts() {
-        accounts.stream().forEach(x -> serializeAccount(x));
+        accounts.forEach(this::serializeAccount);
     }
 }
