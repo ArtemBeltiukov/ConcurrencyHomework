@@ -17,9 +17,6 @@ dependencies {
     testImplementation group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.30'
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.8.0'
 
-
-
-
 }
 
 test {

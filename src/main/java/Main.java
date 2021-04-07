@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Main {
-    private static final int NUMBER_OF_OPERATIONS = 150500;
+    private static final int NUMBER_OF_OPERATIONS = 150000;
 
     public static void main(String[] args) {
 
