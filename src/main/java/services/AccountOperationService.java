@@ -28,7 +28,6 @@ public class AccountOperationService implements Runnable {
         long amount = ThreadLocalRandom.current().nextLong(0, 100000);
         from = ThreadLocalRandom.current().nextInt(1, 11);
         to = ThreadLocalRandom.current().nextInt(1, 11);
-
         if (accountService.transact(from, to, amount)) {
             LOGGER.log(Level.INFO, "Transact {0}", String.format("%s amount from id %s to id %s successful",
                     amount, from, to));

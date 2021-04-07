@@ -13,6 +13,15 @@ public class AccountService {
 
     private final String PATH = System.getProperty("user.dir") + "/accounts";
     private final File folder = new File(getPath());
+
+    public static List<Account> getAccounts() {
+        return accounts;
+    }
+
+    public static void setAccounts(List<Account> accounts) {
+        AccountService.accounts = accounts;
+    }
+
     private static List<Account> accounts = new ArrayList<>();
 
     public String getPath(){
@@ -61,10 +70,11 @@ public class AccountService {
             Account from = getAccountByID(fromID);
             Account to = getAccountByID(toID);
 
-            while (!from.getLock() || !to.getLock()) {
+            if (!from.getLock() || !to.getLock()) {
                 from.unlock();
                 to.unlock();
-                Thread.sleep(100);
+                Thread.currentThread().interrupt();
+                return false;
             }
             boolean result;
             try {

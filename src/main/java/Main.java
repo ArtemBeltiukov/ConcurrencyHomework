@@ -14,9 +14,9 @@ public class Main {
     public static void main(String[] args) {
 
         final int ACC_COUNT = 10;
-        final int NUMBER_OF_TREADS = 20;
+        final int NUMBER_OF_TREADS = 8;
         // Нужно ли создавать акки
-        boolean needToCreateAccs = true;
+        boolean needToCreateAccs = false;
         AccountService accountService = new AccountService();
         AccountOperationService accountOperationService = new AccountOperationService();
         ExecutorService executorService = Executors.newFixedThreadPool(NUMBER_OF_TREADS);
